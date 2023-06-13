@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
 
 namespace UniHacker
@@ -23,18 +25,34 @@ namespace UniHacker
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
+                .With(new FontManagerOptions
+                 {
+                    DefaultFamilyName = "avares://MyAssembly/MyAssets#MyCustomFont"
+                 })
                 .UseReactiveUI();
 
         static void Test()
         {
 #if DEBUG
+            //var patchInfo1 = UnityPatchInfos.FindPatchInfo("2022.1.16", ArchitectureType.Linux);
+            //var patchInfo2 = UnityPatchInfos.FindPatchInfo("2022.1.14", ArchitectureType.Linux);
+
+            var versionName = PlatformUtils.TryGetVersionOfUnity("D:/Unity");
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Debug.WriteLine($"Start Search Pattern.");
+
             var filePath = "D:/Unity";
-            var version = "2022.1.3";
+            //var version = "2021.3.20";
             var architecture = MachineArchitecture.GetArchitectureType(filePath);
-            var patchInfo = UnityPatchInfos.FindPatchInfo(version, architecture);
+            var patchInfo = UnityPatchInfos.FindPatchInfo(versionName, architecture);
             var fileBytes = File.ReadAllBytes(filePath);
             var darkIndexes = BoyerMooreSearcher.FindPattern(patchInfo.DarkPattern, fileBytes);
             var lightIndexes = BoyerMooreSearcher.FindPattern(patchInfo.LightPattern, fileBytes);
+
+            stopwatch.Stop();
+            Debug.WriteLine($"Search Pattern Finish. {stopwatch.ElapsedMilliseconds}");
 
             if (darkIndexes.Count == patchInfo.DarkPattern.Count)
                 Console.Beep();

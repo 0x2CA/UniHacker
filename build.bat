@@ -1,5 +1,6 @@
 @echo off
-REM 注意版本号必须是长度为3的，比如 1.x、2.x之类的，1.x.x 太长了不用这种，下面 line:~9,3 固定读取长度3的字符串
+
+REM 注意版本号有两种模式 1、正式版必须是长度为3的，比如 1.x、2.x之类的 2、Beta版必须是长度为5的，比如 1.x.x、2.x.x之类的
 
 setlocal enabledelayedexpansion
 set defaultVersion=0.0
@@ -10,6 +11,12 @@ for /f "tokens=*" %%x in (UniHacker.csproj) do (
 	set pattern="<Version>"
 	if "!prefix!"==!pattern! (
 		set version=!line:~9,3!
+		
+		set suffix=!line:~12,1!
+		set pattern="<"
+		if not "!suffix!"==!pattern! (
+			set version=!line:~9,5!
+		)
 	)
 )
 
@@ -32,8 +39,8 @@ if exist "%publish%" (
 
 set param=--self-contained:true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:IncludeAllContentForSelfExtract=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false
 
-echo dotnet publish windows x86
-dotnet publish -c:Release -f:net6.0 -r:win-x86 -o:%publish%\win-x86 %param% > nul
+REM echo dotnet publish windows x86
+REM dotnet publish -c:Release -f:net6.0 -r:win-x86 -o:%publish%\win-x86 %param% > nul
 
 echo dotnet publish windows x64
 dotnet publish -c:Release -f:net6.0 -r:win-x64 -o:%publish%\win-x64 %param% > nul
@@ -46,7 +53,7 @@ dotnet publish -c:Release -f:net6.0 -r:linux-x64 -o:%publish%\linux-x64 %param% 
 
 echo rename executable file
 set exeFullName=%exeName%%verName%
-ren %publish%\win-x86\%exeName%.exe %exeFullName%.exe
+REM ren %publish%\win-x86\%exeName%.exe %exeFullName%.exe
 ren %publish%\win-x64\%exeName%.exe %exeFullName%.exe
 ren %publish%\linux-x64\%exeName% %exeFullName%.AppImage
 
@@ -58,8 +65,8 @@ echo f| xcopy /Y "%osxPath%\%exeName%" "%bundlePath%\Contents\Resources\script" 
 del /q %osxPath%\%exeName% > nul
 echo d| move /Y "%osxPath%\*.*" "%bundlePath%\Contents\Resources\" > nul
 
-echo compress windows x86 file
-7z a %publish%\%exeName%-win-x86.7z %publish%\win-x86\* > nul
+REM echo compress windows x86 file
+REM 7z a %publish%\%exeName%-win-x86.7z %publish%\win-x86\* > nul
 
 echo compress windows x64 file
 7z a %publish%\%exeName%-win-x64.7z %publish%\win-x64\* > nul
